@@ -1,0 +1,34 @@
+# Builds the nginx website image and pushes it to Docker Hub (amceyeson/my-simple-website).
+# Equivalent to the manual steps in commands.txt: docker build -> docker tag -> docker push.
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  # Name of the Docker Registry service connection created in Azure DevOps
+  # (Project settings > Service connections > New > Docker Registry > Docker Hub).
+  dockerRegistryServiceConnection: 'dockerhub-amceyeson'
+  imageRepository: 'amceyeson/my-simple-website'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  # v<run number>, e.g. v36, v37 ... plus 'latest'
+  tag: 'v$(Build.BuildId)'
+
+steps:
+  - task: Docker@2
+    displayName: Build and push image to Docker Hub
+    inputs:
+      command: buildAndPush
+      containerRegistry: $(dockerRegistryServiceConnection)
+      repository: $(imageRepository)
+      dockerfile: $(dockerfilePath)
+      buildContext: $(Build.SourcesDirectory)
+      tags: |
+        $(tag)
+        latest
